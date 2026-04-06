@@ -9,3 +9,6 @@ unsigned int createMarbleTexture();
 unsigned int createWoodTexture();
 unsigned int createTileTexture();
 void createAllTextures();
+
+// Load pillar.png (or any image) via stb_image; returns 0 on failure
+unsigned int loadTextureFromFile(const char* path);

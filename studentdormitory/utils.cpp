@@ -54,42 +54,37 @@ void setupLighting(unsigned int sh) {
     }
 
     // 6 point lights
+    // Slots 0-1: building exteriors, 2-3: courtyard lamp clusters,
+    // 4-5: building interiors (corridor + common room)
     glm::vec3 ptPos[] = {
-        {-16.f,  5.0f,  0.f},   // left building exterior
-        { 16.f,  5.0f,  0.f},   // right building exterior
-        {  0.f,  7.0f, 10.f},   // courtyard north
-        {  0.f,  7.0f,-10.f},   // courtyard south
-        {-16.f,  2.8f,  0.f},   // left building interior
-        { 16.f,  2.8f,  0.f},   // right building interior
+        {-16.f,  5.0f,  0.f},
+        { 16.f,  5.0f,  0.f},
+        {  0.f,  7.0f, 10.f},
+        {  0.f,  7.0f,-10.f},
+        {-16.f,  2.8f,  0.f},
+        { 16.f,  2.8f,  0.f},
     };
     glm::vec3 ptCol[] = {
-        {1.f, 0.92f, 0.72f},
-        {0.9f, 0.92f, 1.0f},
-        {1.f, 0.95f, 0.75f},
-        {1.f, 0.95f, 0.75f},
-        {1.f, 0.97f, 0.85f},
-        {1.f, 0.97f, 0.85f},
+        {1.f,0.92f,0.72f},{0.9f,0.92f,1.0f},
+        {1.f,0.95f,0.75f},{1.f,0.95f,0.75f},
+        {1.f,0.97f,0.85f},{1.f,0.97f,0.85f},
     };
-    float ptConst[] = { 1.f, 1.f, 1.f, 1.f, 1.f, 1.f };
-    float ptLinear[] = { 0.027f, 0.027f, 0.035f, 0.035f, 0.14f, 0.14f };
-    float ptQuad[] = { 0.0028f, 0.0028f, 0.004f, 0.004f, 0.07f, 0.07f };
+    float ptConst[] = { 1.f,1.f,1.f,1.f,1.f,1.f };
+    float ptLinear[] = { 0.027f,0.027f,0.035f,0.035f,0.14f,0.14f };
+    float ptQuad[] = { 0.0028f,0.0028f,0.004f,0.004f,0.07f,0.07f };
 
-    if (roomViewMode) {
-        ptPos[4] = { 197.5f, 3.40f, 200.f };
-        ptPos[5] = { 202.5f, 3.40f, 200.f };
+    // When camera is inside building, strengthen interior lights
+    if (cameraInsideBuilding()) {
+        ptPos[4] = { camera.position.x, camera.position.y + 1.5f, camera.position.z };
         ptCol[4] = { 1.0f, 0.97f, 0.88f };
-        ptCol[5] = { 1.0f, 0.97f, 0.88f };
-        ptConst[4] = 1.f; ptLinear[4] = 0.22f; ptQuad[4] = 0.10f;
-        ptConst[5] = 1.f; ptLinear[5] = 0.22f; ptQuad[5] = 0.10f;
+        ptConst[4] = 1.f; ptLinear[4] = 0.20f; ptQuad[4] = 0.08f;
     }
 
     for (int i = 0; i < 6; i++) {
         std::string n = itos(i);
         glUniform3fv(glGetUniformLocation(sh, ("pointLights_position[" + n + "]").c_str()), 1, glm::value_ptr(ptPos[i]));
         glUniform3f(glGetUniformLocation(sh, ("pointLights_ambient[" + n + "]").c_str()),
-            (i >= 4) ? 0.35f : 0.05f,
-            (i >= 4) ? 0.35f : 0.05f,
-            (i >= 4) ? 0.32f : 0.05f);
+            (i >= 4) ? 0.38f : 0.05f, (i >= 4) ? 0.38f : 0.05f, (i >= 4) ? 0.35f : 0.05f);
         glUniform3fv(glGetUniformLocation(sh, ("pointLights_diffuse[" + n + "]").c_str()), 1, glm::value_ptr(ptCol[i] * 0.72f));
         glUniform3fv(glGetUniformLocation(sh, ("pointLights_specular[" + n + "]").c_str()), 1, glm::value_ptr(ptCol[i]));
         glUniform1f(glGetUniformLocation(sh, ("pointLights_constant[" + n + "]").c_str()), ptConst[i]);
@@ -97,23 +92,14 @@ void setupLighting(unsigned int sh) {
         glUniform1f(glGetUniformLocation(sh, ("pointLights_quadratic[" + n + "]").c_str()), ptQuad[i]);
     }
 
-    // ── SPOTLIGHT: fixed at top of courtyard staircase, shining downward ──
-    // Staircase top: x=0, z=-14+(7*0.70)+1.0 = -14+4.9+1.0 = -8.1, y=8*0.22+0.5 = 2.26
-    // Positioned above the staircase landing, pointing straight down-forward
-    if (!roomViewMode) {
-        glUniform3f(glGetUniformLocation(sh, "spotLight_position"), 0.f, 6.5f, -9.5f);
-        glUniform3f(glGetUniformLocation(sh, "spotLight_direction"), 0.f, -1.f, -0.3f);
-    }
-    else {
-        // In room view: spotlight follows camera as a torch
-        glUniform3f(glGetUniformLocation(sh, "spotLight_position"),
-            camera.position.x, camera.position.y, camera.position.z);
-        glUniform3f(glGetUniformLocation(sh, "spotLight_direction"),
-            camera.front.x, camera.front.y, camera.front.z);
-    }
-    glUniform1f(glGetUniformLocation(sh, "spotLight_cutOff"), cosf(glm::radians(20.0f)));
+    // Spotlight: fixed at top of the right-side staircase
+    // Staircase at x=7, top step z=8+7*0.70=12.9, y=8*0.22+0.16=1.92 -> place light above landing
+    // Shines downward-forward to illuminate staircase top and landing area
+    glUniform3f(glGetUniformLocation(sh, "spotLight_position"), 7.f, 6.8f, 14.5f);
+    glUniform3f(glGetUniformLocation(sh, "spotLight_direction"), 0.f, -1.f, -0.5f);
+    glUniform1f(glGetUniformLocation(sh, "spotLight_cutOff"), cosf(glm::radians(22.0f)));
     glUniform3f(glGetUniformLocation(sh, "spotLight_ambient"), 0.02f, 0.02f, 0.02f);
     glUniform3f(glGetUniformLocation(sh, "spotLight_diffuse"), 1.0f, 0.96f, 0.80f);
     glUniform3f(glGetUniformLocation(sh, "spotLight_specular"), 1.0f, 0.96f, 0.80f);
-    glUniform3f(glGetUniformLocation(sh, "emissive"), 0, 0, 0);
+    glUniform3f(glGetUniformLocation(sh, "emissive"), 0.f, 0.f, 0.f);
 }

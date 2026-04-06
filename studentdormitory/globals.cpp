@@ -4,7 +4,6 @@ int SCR_WIDTH = 1280;
 int SCR_HEIGHT = 720;
 const float PI = 3.14159265f;
 int activeViewport = -1;
-bool roomViewMode = false;
 
 Camera        camera;
 LightingState lighting;
@@ -14,6 +13,7 @@ float deltaTime = 0.f;
 float lastFrame = 0.f;
 
 unsigned int texBrick, texGrass, texConcrete, texMarble, texWood, texTile;
+unsigned int texPillar = 0;   // 0 = not loaded yet
 
 unsigned int cubeVAO, cubeVBO;
 unsigned int cylVAO, cylVBO;  int cylCount;

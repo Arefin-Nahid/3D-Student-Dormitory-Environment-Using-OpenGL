@@ -1,4 +1,4 @@
-#include "textures.h"
+﻿#include "textures.h"
 #include "globals.h"
 #include <glad/glad.h>
 #include <cmath>
@@ -115,10 +115,47 @@ unsigned int createTileTexture() {
 }
 
 void createAllTextures() {
-    texBrick    = createBrickTexture();
-    texGrass    = createGrassTexture();
+    texBrick = createBrickTexture();
+    texGrass = createGrassTexture();
     texConcrete = createConcreteTexture();
-    texMarble   = createMarbleTexture();
-    texWood     = createWoodTexture();
-    texTile     = createTileTexture();
+    texMarble = createMarbleTexture();
+    texWood = createWoodTexture();
+    texTile = createTileTexture();
+}
+
+// ── stb_image-based image loader ─────────────────────────────────────────────
+// Place stb_image.h in the project folder (single-header library).
+// Usage: texPillar = loadTextureFromFile("textures/pillar.png");
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#include <iostream>
+
+unsigned int loadTextureFromFile(const char* path) {
+    unsigned int textureID = 0;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);
+    if (data) {
+        GLenum format = (nrChannels == 4) ? GL_RGBA :
+            (nrChannels == 3) ? GL_RGB : GL_RED;
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        stbi_image_free(data);
+        std::cout << "[Texture] Loaded " << path << " (" << width << "x" << height << " ch=" << nrChannels << ")\n";
+    }
+    else {
+        std::cerr << "[Texture] Failed to load: " << path << " – " << stbi_failure_reason() << "\n";
+        glDeleteTextures(1, &textureID);
+        textureID = 0;
+    }
+    return textureID;
 }

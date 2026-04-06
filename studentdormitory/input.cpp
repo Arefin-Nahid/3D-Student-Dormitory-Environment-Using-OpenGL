@@ -21,18 +21,17 @@ void processInput(GLFWwindow* window) {
     // G: toggle 4-grid / single free camera
     static bool gP = false;
     if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS && !gP) {
-        activeViewport = (activeViewport == -1) ? 3 : -1;
-        gP = true;
+        activeViewport = (activeViewport == -1) ? 3 : -1;  gP = true;
     }
     else if (glfwGetKey(window, GLFW_KEY_G) == GLFW_RELEASE) gP = false;
 
-    // P: reset camera to overview
+    // P: reset camera
     static bool pP = false;
     if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS && !pP) {
-        roomViewMode = false;
-        camera.position = glm::vec3(0.f, 28.f, 75.f);
-        camera.yaw = -90.f; camera.pitch = -18.f; camera.roll = 0.f;
+        camera.position = glm::vec3(0.f, 12.f, 65.f);
+        camera.yaw = -90.f; camera.pitch = -10.f; camera.roll = 0.f;
         updateCameraVectors(); pP = true;
+        std::cout << "[P] Camera reset." << std::endl;
     }
     else if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE) pP = false;
 
@@ -40,42 +39,31 @@ void processInput(GLFWwindow* window) {
     static bool fP = false;
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS && !fP) {
         camera.orbitMode = !camera.orbitMode; fP = true;
+        std::cout << "Orbit: " << (camera.orbitMode ? "ON" : "OFF") << std::endl;
     }
     else if (glfwGetKey(window, GLFW_KEY_F) == GLFW_RELEASE) fP = false;
 
-    // I: bird's eye mode
+    // I: bird's eye
     static bool iP = false;
     if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS && !iP) {
         camera.birdsEyeMode = !camera.birdsEyeMode; iP = true;
+        std::cout << "Bird's Eye: " << (camera.birdsEyeMode ? "ON" : "OFF") << std::endl;
     }
     else if (glfwGetKey(window, GLFW_KEY_I) == GLFW_RELEASE) iP = false;
 
-    // O: enter / leave dorm room (no console message – seamless transition)
-    static bool oP = false;
-    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS && !oP) {
-        roomViewMode = !roomViewMode;
-        if (roomViewMode) {
-            // Place camera just inside the room door, looking into the room
-            camera.position = glm::vec3(200.f, 1.72f, 208.2f);
-            camera.yaw = -90.f;
-            camera.pitch = -5.f;
-            camera.roll = 0.f;
-        }
-        else {
-            camera.position = glm::vec3(0.f, 28.f, 75.f);
-            camera.yaw = -90.f;
-            camera.pitch = -18.f;
-            camera.roll = 0.f;
-        }
-        updateCameraVectors();
-        oP = true;
-    }
-    else if (glfwGetKey(window, GLFW_KEY_O) == GLFW_RELEASE) oP = false;
-
-    // T: cycle texture mode
+    // T: cycle texture mode 0-4
     static bool tP = false;
     if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS && !tP) {
-        textureMode = (textureMode + 1) % 4; tP = true;
+        textureMode = (textureMode + 1) % 5;
+        const char* names[] = {
+            "0 No Texture (Phong)",
+            "1 Simple Texture",
+            "2 Vertex Gouraud + Texture",
+            "3 Fragment Phong + Texture",
+            "4 Pillar Image Texture (pillar.png)"
+        };
+        std::cout << "[T] Texture Mode -> " << names[textureMode] << std::endl;
+        tP = true;
     }
     else if (glfwGetKey(window, GLFW_KEY_T) == GLFW_RELEASE) tP = false;
 
@@ -94,15 +82,15 @@ void processInput(GLFWwindow* window) {
 
         static bool v0P = false, v1P = false, v2P = false, v3P = false, v4P = false;
     bool vHeld = (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS);
-    if (vHeld && glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS && !v0P) { activeViewport = -1; v0P = true; }
+    if (vHeld && glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS && !v0P) { activeViewport = -1; v0P = true; std::cout << "[V+0] 4-Viewport" << std::endl; }
     else if (glfwGetKey(window, GLFW_KEY_0) == GLFW_RELEASE) v0P = false;
-    if (vHeld && glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS && !v1P) { activeViewport = 0;  v1P = true; }
+    if (vHeld && glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS && !v1P) { activeViewport = 0; v1P = true; std::cout << "[V+1] Isometric" << std::endl; }
     else if (glfwGetKey(window, GLFW_KEY_1) == GLFW_RELEASE) v1P = false;
-    if (vHeld && glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS && !v2P) { activeViewport = 1;  v2P = true; }
+    if (vHeld && glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS && !v2P) { activeViewport = 1; v2P = true; std::cout << "[V+2] Front View" << std::endl; }
     else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_RELEASE) v2P = false;
-    if (vHeld && glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS && !v3P) { activeViewport = 2;  v3P = true; }
+    if (vHeld && glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS && !v3P) { activeViewport = 2; v3P = true; std::cout << "[V+3] Top-Down" << std::endl; }
     else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_RELEASE) v3P = false;
-    if (vHeld && glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS && !v4P) { activeViewport = 3;  v4P = true; }
+    if (vHeld && glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS && !v4P) { activeViewport = 3; v4P = true; std::cout << "[V+4] Free Camera" << std::endl; }
     else if (glfwGetKey(window, GLFW_KEY_4) == GLFW_RELEASE) v4P = false;
 }
 
@@ -110,19 +98,18 @@ void printInstructions() {
     std::cout << "\n+==================================================================+" << std::endl;
     std::cout << "|       STUDENT DORMITORY - KUET  (Full Campus Simulation)        |" << std::endl;
     std::cout << "+==================================================================+" << std::endl;
-    std::cout << "|  TEXTURE MODES (T to cycle):                                    |" << std::endl;
-    std::cout << "|   0 - No Texture (Phong only)    2 - Vertex Gouraud + Texture   |" << std::endl;
-    std::cout << "|   1 - Simple Texture             3 - Fragment Phong + Texture   |" << std::endl;
+    std::cout << "|  TEXTURE MODES (T cycles 0->4):                                 |" << std::endl;
+    std::cout << "|   0 = No Texture (Phong)         3 = Fragment Phong + Texture   |" << std::endl;
+    std::cout << "|   1 = Simple Texture             4 = Pillar image (pillar.png)  |" << std::endl;
+    std::cout << "|   2 = Vertex Gouraud + Texture                                  |" << std::endl;
     std::cout << "+==================================================================+" << std::endl;
-    std::cout << "|  LIGHTING:  1=Dir  2=Point  3=Spot  5=Ambient  6=Diff  7=Spec   |" << std::endl;
-    std::cout << "|             L = Day / Night toggle                               |" << std::endl;
+    std::cout << "|  LIGHTING:  1=Dir  2=Point  3=Spot  5=Amb  6=Diff  7=Spec  L=Day|" << std::endl;
     std::cout << "+==================================================================+" << std::endl;
-    std::cout << "|  CAMERA: W/S/A/D=move  E/R=up/down  X/Y/Z=pitch/yaw/roll       |" << std::endl;
-    std::cout << "|          F=Orbit  I=Bird's Eye  P=Reset overview                |" << std::endl;
-    std::cout << "|          O=Enter room (walk inside)  O again=Exit room          |" << std::endl;
+    std::cout << "|  CAMERA: W/S/A/D=move  E/R=up/dn  X/Y/Z=pitch/yaw/roll          |" << std::endl;
+    std::cout << "|          F=Orbit  I=Bird's Eye  P=Reset  G=Grid toggle           |" << std::endl;
+    std::cout << "|  Walk into the LEFT building to see the dormitory room interior! |" << std::endl;
     std::cout << "+==================================================================+" << std::endl;
-    std::cout << "|  VIEWPORTS: G=toggle grid/free  V+0..4=switch viewport          |" << std::endl;
-    std::cout << "|   V+0 = 4-split  V+1 = Isometric  V+2 = Front  V+3 = Top       |" << std::endl;
-    std::cout << "|   V+4 = Free Camera     ESC = Quit                              |" << std::endl;
+    std::cout << "|  VIEWPORTS: V+0=4split V+1=Iso V+2=Front V+3=Top V+4=Free       |" << std::endl;
+    std::cout << "|  ESC = Quit                                                      |" << std::endl;
     std::cout << "+==================================================================+\n" << std::endl;
 }

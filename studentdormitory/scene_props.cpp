@@ -264,10 +264,14 @@ void renderGate(unsigned int sh) {
             { PR * 2.f + 0.30f, 0.56f, PR * 2.f + 0.30f });
         drawCube(sh, m, CONC2, texConcrete, 1.f);
 
-        // Main cylindrical shaft (brick coloured)
+        // Main cylindrical shaft – uses pillar.png image texture in mode 4
         m = glm::scale(glm::translate(glm::mat4(1.f), { px, PHT * 0.5f + 0.56f, GZ }),
             { PR * 2.f, PHT, PR * 2.f });
-        drawCylinder(sh, m, BRICK2, texBrick, 3.f);
+        {
+            // In texture mode 4 apply the loaded pillar.png; otherwise brick texture
+            unsigned int pillarTex = (textureMode == 4 && texPillar != 0) ? texPillar : texBrick;
+            drawCylinder(sh, m, BRICK2, pillarTex, 3.f);
+        }
 
         // Capital ring
         m = glm::scale(glm::translate(glm::mat4(1.f), { px, PHT + 0.62f, GZ }),

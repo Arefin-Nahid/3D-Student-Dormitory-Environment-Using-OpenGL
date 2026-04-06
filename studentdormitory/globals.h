@@ -9,17 +9,14 @@ extern int SCR_HEIGHT;
 extern const float PI;
 extern int activeViewport;
 
-// ─── Room view mode ──────────────────────────────────────────────────────────
-extern bool roomViewMode;   // true = O key pressed, camera inside dorm room
-
 // ─── Camera ──────────────────────────────────────────────────────────────────
 struct Camera {
-    glm::vec3 position{ 0.f, 28.f, 75.f };
-    glm::vec3 front{ 0.f, -0.32f, -1.f };
-    glm::vec3 up{ 0.f,  1.f,   0.f };
-    glm::vec3 right{ 1.f,  0.f,   0.f };
-    glm::vec3 worldUp{ 0.f,  1.f,   0.f };
-    float yaw = -90.f, pitch = -18.f, roll = 0.f;
+    glm::vec3 position{ 0.f, 12.f, 65.f };
+    glm::vec3 front{ 0.f, -0.18f, -1.f };
+    glm::vec3 up{ 0.f,  1.f,  0.f };
+    glm::vec3 right{ 1.f,  0.f,  0.f };
+    glm::vec3 worldUp{ 0.f,  1.f,  0.f };
+    float yaw = -90.f, pitch = -10.f, roll = 0.f;
     float speed = 5.f;
     bool birdsEyeMode = false, orbitMode = false;
 };
@@ -33,12 +30,13 @@ struct LightingState {
 extern Camera        camera;
 extern LightingState lighting;
 extern bool  dayMode;
-extern int   textureMode;
+extern int   textureMode;  // 0..4  (4 = pillar image texture showcase)
 extern float deltaTime;
 extern float lastFrame;
 
 // ─── Texture IDs ─────────────────────────────────────────────────────────────
 extern unsigned int texBrick, texGrass, texConcrete, texMarble, texWood, texTile;
+extern unsigned int texPillar;   // loaded from pillar.png via stb_image
 
 // ─── VAO / VBO handles ───────────────────────────────────────────────────────
 extern unsigned int cubeVAO, cubeVBO;
@@ -69,3 +67,11 @@ extern const glm::vec3 COL_WATER;
 extern const glm::vec3 COL_RAILING;
 extern const glm::vec3 COL_FLOOR;
 extern const glm::vec3 COL_BALCONY;
+
+// ─── Interior detection helper ────────────────────────────────────────────────
+// Returns true when the camera is physically inside the left dormitory building
+inline bool cameraInsideBuilding() {
+    return (camera.position.x > -22.f && camera.position.x < -10.f &&
+        camera.position.z > -16.f && camera.position.z < 16.f &&
+        camera.position.y < 8.f);
+}

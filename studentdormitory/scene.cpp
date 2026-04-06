@@ -10,28 +10,23 @@
 #include <glm/gtc/type_ptr.hpp>
 
 void renderScene(unsigned int sh) {
-    if (roomViewMode) {
-        renderDormRoom(sh);
-        return;
-    }
-
     // Ground & boundaries
     renderGround(sh);
     renderBoundaryWall(sh);
     renderPaths(sh);
 
-    // Main buildings
-    renderDormBlockA(sh);   // Left  – student living
-    renderDormBlockB(sh);   // Right – common facilities
-    renderCorridor(sh);     // Covered walkways
-    renderCourtyard(sh);    // Central courtyard (grass, staircase, benches, trees)
-    renderAdminAnnex(sh);   // Back utility block
-    //renderEntranceSphere(sh); // Gate pillar finials
+    // Main buildings (interior always rendered; visible when camera enters)
+    renderDormBlockA(sh);
+    renderDormBlockB(sh);
+    renderCorridor(sh);
+    renderCourtyard(sh);
+    renderAdminAnnex(sh);
+    renderEntranceSphere(sh);
 
-    // Gate
+    // Gate with cylindrical pillars + texPillar in mode 4
     renderGate(sh);
 
-    // Courtyard lamp posts along central path
+    // Courtyard lamp posts
     renderLampPost(sh, -3.5f, 13.0f);
     renderLampPost(sh, 3.5f, 13.0f);
     renderLampPost(sh, -3.5f, 0.0f);
@@ -39,7 +34,7 @@ void renderScene(unsigned int sh) {
     renderLampPost(sh, -3.5f, -10.0f);
     renderLampPost(sh, 3.5f, -10.0f);
 
-    // Palm trees at building corners
+    // Palm trees at corners
     renderPalmTree(sh, { -26.f, 0.f,  18.f });
     renderPalmTree(sh, { -26.f, 0.f,  -2.f });
     renderPalmTree(sh, { 26.f, 0.f,  18.f });
@@ -49,14 +44,14 @@ void renderScene(unsigned int sh) {
     renderConeTree(sh, -26.f, -14.f);
     renderConeTree(sh, 26.f, -14.f);
 
-    // TWO FRACTAL TREES flanking the gate entrance
+    // Fractal trees flanking the gate
     renderFractalTree(sh, -12.f, 24.f);
     renderFractalTree(sh, 12.f, 24.f);
 
     // Walking students in front of dormitory
     renderWalkingStudents(sh);
 
-    // Sports facilities
+    // Sports (tennis LEFT at x=-52, football RIGHT at x=+52)
     renderTennisCourt(sh);
     renderTennisPlayers(sh);
     renderTennisBall(sh);

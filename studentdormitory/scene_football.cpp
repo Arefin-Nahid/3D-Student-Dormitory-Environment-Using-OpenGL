@@ -1,4 +1,4 @@
-#include "scene_football.h"
+﻿#include "scene_football.h"
 #include "globals.h"
 #include "draw_helpers.h"
 #include <glad/glad.h>
@@ -8,12 +8,12 @@
 #include <cmath>
 #include <algorithm>
 
-const float CR_X     =  52.f;
-const float CR_Z     = -10.f;
-const float CR_Y     =   0.06f;
-const float CR_FLEN  =  40.f;
-const float CR_FWID  =  25.f;
-const float CR_CYCLE =   3.0f;
+const float CR_X = 52.f;
+const float CR_Z = -10.f;
+const float CR_Y = 0.06f;
+const float CR_FLEN = 40.f;
+const float CR_FWID = 25.f;
+const float CR_CYCLE = 3.0f;
 
 void renderFootballField(unsigned int sh) {
     glm::mat4 m;
@@ -202,10 +202,10 @@ void renderFootballPlayers(unsigned int sh) {
             m = glm::scale(glm::translate(glm::mat4(1.f), { px + s * 0.38f, bY + 1.65f, pz }), { 0.14f, 0.55f, 0.14f });
             drawCube(sh, m, shirt);
         }
-    };
+        };
 
     float strikerZ = CR_Z - CR_FLEN * 0.3f + phase * CR_FLEN * 0.6f;
-    float strideA  = 35.f * sinf(t * 4.f);
+    float strideA = 35.f * sinf(t * 4.f);
     drawFootballer(CR_X - 2.f, strikerZ, SHIRT_A, SHORTS_A, strideA, -strideA);
 
     float gkSway = 1.8f * sinf(t * 1.2f);
@@ -226,42 +226,60 @@ void renderFootballPlayers(unsigned int sh) {
 
 void renderFootball(unsigned int sh) {
     float t = (float)glfwGetTime();
+
+    // Physics: ball rolls with striker for 75% of cycle, then shots toward goal with arc
+    // Use continuous sinusoidal rolling on ground, with proper gravity arc for the shot
+    const float BALL_R = 0.22f;
+    const float GROUND = CR_Y + BALL_R;  // ball centre when on ground
+
     float phase = fmodf(t, CR_CYCLE) / CR_CYCLE;
 
+    // Striker Z position (moves north across field)
     float strikerZ = CR_Z - CR_FLEN * 0.3f + phase * CR_FLEN * 0.6f;
-    float ballX = CR_X - 2.f + 0.3f * sinf(t * 4.2f);
-    float ballZ, ballY;
+
+    float ballX, ballY, ballZ;
 
     if (phase < 0.75f) {
+        // ── Rolling phase: ball stays with striker, tiny hop for "dribble" feel ──
+        float rollPhase = phase / 0.75f;          // 0->1
+        ballX = CR_X - 2.f + 0.3f * sinf(t * 4.2f);
         ballZ = strikerZ + 0.5f;
-        ballY = CR_Y + 0.18f + 0.05f * fabsf(sinf(t * 8.f));
+        // Small hop: uses absolute sinf so ball never goes below ground
+        float hop = fabsf(sinf(t * 9.5f)) * 0.18f;
+        ballY = GROUND + hop;
     }
     else {
-        float p = (phase - 0.75f) / 0.25f;
-        float goalZ = CR_Z + CR_FLEN * 0.5f;
+        // ── Shot phase: ball flies toward north goal with parabolic arc ──
+        float p = (phase - 0.75f) / 0.25f;  // 0->1 during shot
+        float goalZ = CR_Z + CR_FLEN * 0.5f - 0.5f;
+        ballX = CR_X - 2.f + p * 2.4f;           // slight curve toward goal centre
         ballZ = strikerZ + p * (goalZ - strikerZ);
-        ballX = CR_X - 2.f + p * 2.f;
+        // Parabolic arc: peak at p=0.5
         float arc = 4.f * p * (1.f - p);
-        ballY = CR_Y + 0.18f + arc * 3.5f;
+        ballY = GROUND + arc * 4.2f;             // peak ~4.2 units above ground
     }
 
     float spinAngle = t * 480.f;
-    glm::mat4 base = glm::translate(glm::mat4(1.f), { ballX, ballY, ballZ });
-    base = glm::rotate(base, glm::radians(spinAngle), { 1.f, 0.f, 0.f });
+    glm::mat4 base = glm::translate(glm::mat4(1.f), { ballX,ballY,ballZ });
+    base = glm::rotate(base, glm::radians(spinAngle), { 1.f,0.f,0.f });
 
-    glm::mat4 m = glm::scale(base, { 0.22f, 0.22f, 0.22f });
+    // White base sphere
+    glm::mat4 m = glm::scale(base, { BALL_R,BALL_R,BALL_R });
     drawSphere(sh, m, glm::vec3(0.96f, 0.96f, 0.94f), texMarble, 1.f);
 
+    // Black pentagon patches
     const glm::vec3 BLACK(0.08f, 0.08f, 0.08f);
     for (int i = 0; i < 6; i++) {
         float ang = i * 60.f;
         glm::mat4 p2 = glm::rotate(base, glm::radians(ang), { 0.f,1.f,0.f });
-        p2 = glm::translate(p2, { 0.f, 0.22f, 0.f });
-        m = glm::scale(p2, { 0.12f, 0.03f, 0.12f });
+        p2 = glm::translate(p2, { 0.f,BALL_R,0.f });
+        m = glm::scale(p2, { 0.12f,0.03f,0.12f });
         drawCylinder(sh, m, BLACK);
     }
 
-    float shadowSc = 0.22f + 0.08f * (1.f - std::min((ballY - CR_Y) / 4.0f, 1.f));
-    m = glm::scale(glm::translate(glm::mat4(1.f), { ballX, CR_Y + 0.005f, ballZ }), { shadowSc * 2.5f, 0.015f, shadowSc * 2.5f });
+    // Shadow (shrinks as ball rises)
+    float shadowSc = BALL_R + 0.08f * (1.f - std::min((ballY - GROUND) / 4.2f, 1.f));
+    m = glm::scale(glm::translate(glm::mat4(1.f), { ballX,CR_Y + 0.005f,ballZ }),
+        { shadowSc * 2.5f,0.015f,shadowSc * 2.5f });
     drawCylinder(sh, m, glm::vec3(0.04f, 0.09f, 0.04f));
 }

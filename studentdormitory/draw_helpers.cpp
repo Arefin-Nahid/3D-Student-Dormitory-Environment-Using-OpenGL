@@ -3,10 +3,23 @@
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 
+// texMode 0: Phong * objectColor (no texture)
+// texMode 1: Phong * texColor
+// texMode 2: Gouraud blend with texture
+// texMode 3: Fragment Phong blend with texture
+// texMode 4: Phong * texColor (image texture – pillar.png or passed texID)
+//   In mode 4 the caller passes texPillar; if texID==0 falls back to mode 0.
+
 void applyTexture(unsigned int shader, unsigned int texID, float uvTile) {
     glUniform1f(glGetUniformLocation(shader, "uvTile"), uvTile);
-    int effMode = (texID != 0) ? textureMode : 0;
+
+    // In mode 4 treat it like mode 1 (Phong * image texture)
+    int shaderMode = textureMode;
+    if (shaderMode == 4) shaderMode = 1;  // shader only knows 0-3
+
+    int effMode = (texID != 0 && textureMode != 0) ? shaderMode : 0;
     glUniform1i(glGetUniformLocation(shader, "texMode"), effMode);
+
     if (texID != 0 && textureMode != 0) {
         glUniform1i(glGetUniformLocation(shader, "hasTexture"), 1);
         glActiveTexture(GL_TEXTURE0);
@@ -21,7 +34,8 @@ void applyTexture(unsigned int shader, unsigned int texID, float uvTile) {
 void drawCube(unsigned int sh, glm::mat4 m, glm::vec3 col, unsigned int tex, float tile) {
     glUniformMatrix4fv(glGetUniformLocation(sh, "model"), 1, GL_FALSE, glm::value_ptr(m));
     glUniform3fv(glGetUniformLocation(sh, "objectColor"), 1, glm::value_ptr(col));
-    applyTexture(sh, tex, tile); glBindVertexArray(cubeVAO); glDrawArrays(GL_TRIANGLES, 0, 36);
+    applyTexture(sh, tex, tile);
+    glBindVertexArray(cubeVAO); glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
 void drawGlass(unsigned int sh, glm::mat4 m) {
@@ -60,17 +74,20 @@ void drawSignCube(unsigned int sh, glm::mat4 m) {
 void drawCylinder(unsigned int sh, glm::mat4 m, glm::vec3 col, unsigned int tex, float tile) {
     glUniformMatrix4fv(glGetUniformLocation(sh, "model"), 1, GL_FALSE, glm::value_ptr(m));
     glUniform3fv(glGetUniformLocation(sh, "objectColor"), 1, glm::value_ptr(col));
-    applyTexture(sh, tex, tile); glBindVertexArray(cylVAO); glDrawArrays(GL_TRIANGLES, 0, cylCount);
+    applyTexture(sh, tex, tile);
+    glBindVertexArray(cylVAO); glDrawArrays(GL_TRIANGLES, 0, cylCount);
 }
 
 void drawSphere(unsigned int sh, glm::mat4 m, glm::vec3 col, unsigned int tex, float tile) {
     glUniformMatrix4fv(glGetUniformLocation(sh, "model"), 1, GL_FALSE, glm::value_ptr(m));
     glUniform3fv(glGetUniformLocation(sh, "objectColor"), 1, glm::value_ptr(col));
-    applyTexture(sh, tex, tile); glBindVertexArray(sphVAO); glDrawArrays(GL_TRIANGLES, 0, sphCount);
+    applyTexture(sh, tex, tile);
+    glBindVertexArray(sphVAO); glDrawArrays(GL_TRIANGLES, 0, sphCount);
 }
 
 void drawCone(unsigned int sh, glm::mat4 m, glm::vec3 col, unsigned int tex, float tile) {
     glUniformMatrix4fv(glGetUniformLocation(sh, "model"), 1, GL_FALSE, glm::value_ptr(m));
     glUniform3fv(glGetUniformLocation(sh, "objectColor"), 1, glm::value_ptr(col));
-    applyTexture(sh, tex, tile); glBindVertexArray(conVAO); glDrawArrays(GL_TRIANGLES, 0, conCount);
+    applyTexture(sh, tex, tile);
+    glBindVertexArray(conVAO); glDrawArrays(GL_TRIANGLES, 0, conCount);
 }

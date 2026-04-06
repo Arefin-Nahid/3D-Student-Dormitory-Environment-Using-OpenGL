@@ -159,6 +159,7 @@
     <ClInclude Include="scene_props.h" />
     <ClInclude Include="scene_tennis.h" />
     <ClInclude Include="shaders.h" />
+    <ClInclude Include="stb_image.h" />
     <ClInclude Include="textures.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
