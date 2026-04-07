@@ -2,6 +2,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include "match_state.h"
 
 // ─── Screen dimensions ───────────────────────────────────────────────────────
 extern int SCR_WIDTH;

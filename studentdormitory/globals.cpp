@@ -12,6 +12,9 @@ int   textureMode = 0;
 float deltaTime = 0.f;
 float lastFrame = 0.f;
 
+FootballMatch gFootballMatch;
+TennisMatch   gTennisMatch;
+
 unsigned int texBrick, texGrass, texConcrete, texMarble, texWood, texTile;
 unsigned int texPillar = 0;   // 0 = not loaded yet
 

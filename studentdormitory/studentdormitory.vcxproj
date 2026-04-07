@@ -152,6 +152,7 @@
     <ClInclude Include="geometry.h" />
     <ClInclude Include="globals.h" />
     <ClInclude Include="input.h" />
+    <ClInclude Include="match_state.h" />
     <ClInclude Include="scene.h" />
     <ClInclude Include="scene_buildings.h" />
     <ClInclude Include="scene_football.h" />

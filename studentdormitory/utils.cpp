@@ -1,4 +1,4 @@
-#include "utils.h"
+﻿#include "utils.h"
 #include "globals.h"
 #include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -92,14 +92,36 @@ void setupLighting(unsigned int sh) {
         glUniform1f(glGetUniformLocation(sh, ("pointLights_quadratic[" + n + "]").c_str()), ptQuad[i]);
     }
 
-    // Spotlight: fixed at top of the right-side staircase
-    // Staircase at x=7, top step z=8+7*0.70=12.9, y=8*0.22+0.16=1.92 -> place light above landing
-    // Shines downward-forward to illuminate staircase top and landing area
-    glUniform3f(glGetUniformLocation(sh, "spotLight_position"), 7.f, 6.8f, 14.5f);
-    glUniform3f(glGetUniformLocation(sh, "spotLight_direction"), 0.f, -1.f, -0.5f);
-    glUniform1f(glGetUniformLocation(sh, "spotLight_cutOff"), cosf(glm::radians(22.0f)));
-    glUniform3f(glGetUniformLocation(sh, "spotLight_ambient"), 0.02f, 0.02f, 0.02f);
-    glUniform3f(glGetUniformLocation(sh, "spotLight_diffuse"), 1.0f, 0.96f, 0.80f);
-    glUniform3f(glGetUniformLocation(sh, "spotLight_specular"), 1.0f, 0.96f, 0.80f);
-    glUniform3f(glGetUniformLocation(sh, "emissive"), 0.f, 0.f, 0.f);
+    // ───────── PERFECT STAIR SPOTLIGHT ─────────
+
+// Position: directly above the staircase center
+    glUniform3f(glGetUniformLocation(sh, "spotLight_position"),
+        0.0f,   // center X (stairs are centered)
+        6.5f,   // height above stairs
+        -11.5f  // middle of staircase (between -10 to -16)
+    );
+
+    // Direction: straight down + slightly toward building
+    glm::vec3 dir = glm::normalize(glm::vec3(0.0f, -1.0f, -0.3f));
+    glUniform3fv(glGetUniformLocation(sh, "spotLight_direction"), 1, glm::value_ptr(dir));
+
+    // Narrow beam → focused on stairs only
+    glUniform1f(glGetUniformLocation(sh, "spotLight_cutOff"),
+        cosf(glm::radians(28.0f))
+    );
+
+    // Stronger inner beam (optional but realistic)
+    glUniform1f(glGetUniformLocation(sh, "spotLight_outerCutOff"),
+        cosf(glm::radians(38.0f))
+    );
+
+    // Light color (warm)
+    glUniform3f(glGetUniformLocation(sh, "spotLight_ambient"), 0.05f, 0.05f, 0.05f);
+    glUniform3f(glGetUniformLocation(sh, "spotLight_diffuse"), 1.0f, 0.95f, 0.80f);
+    glUniform3f(glGetUniformLocation(sh, "spotLight_specular"), 1.0f, 0.95f, 0.80f);
+
+    // Attenuation (important for realism)
+    glUniform1f(glGetUniformLocation(sh, "spotLight_constant"), 1.0f);
+    glUniform1f(glGetUniformLocation(sh, "spotLight_linear"), 0.09f);
+    glUniform1f(glGetUniformLocation(sh, "spotLight_quadratic"), 0.032f);
 }

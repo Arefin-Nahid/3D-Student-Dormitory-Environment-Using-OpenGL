@@ -1,6 +1,7 @@
-#include "input.h"
+﻿#include "input.h"
 #include "globals.h"
 #include "utils.h"
+#include "match_state.h"
 #include <iostream>
 
 void processInput(GLFWwindow* window) {
@@ -14,9 +15,29 @@ void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.position += camera.right * vel;
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) camera.position += camera.up * vel;
     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) camera.position -= camera.up * vel;
-    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) { camera.pitch += 1.f; updateCameraVectors(); }
-    if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) { camera.yaw += 1.f; updateCameraVectors(); }
-    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) { camera.roll += 1.f; updateCameraVectors(); }
+
+    // ── Bidirectional rotation with SHIFT modifier ────────────────────────────
+    // Detect either SHIFT key being held
+    bool shiftHeld = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+        glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS);
+
+    const float ROT_SPEED = 60.f * deltaTime; // degrees per second
+
+    // X → Pitch up (+) | SHIFT+X → Pitch down (−)
+    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
+        camera.pitch += shiftHeld ? -ROT_SPEED : ROT_SPEED;
+        updateCameraVectors();
+    }
+    // Y → Yaw right (+) | SHIFT+Y → Yaw left (−)
+    if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) {
+        camera.yaw += shiftHeld ? -ROT_SPEED : ROT_SPEED;
+        updateCameraVectors();
+    }
+    // Z → Roll clockwise (+) | SHIFT+Z → Roll counterclockwise (−)
+    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
+        camera.roll += shiftHeld ? -ROT_SPEED : ROT_SPEED;
+        updateCameraVectors();
+    }
 
     // G: toggle 4-grid / single free camera
     static bool gP = false;
@@ -67,6 +88,66 @@ void processInput(GLFWwindow* window) {
     }
     else if (glfwGetKey(window, GLFW_KEY_T) == GLFW_RELEASE) tP = false;
 
+    // ── M: Toggle Football Match (Start / Pause / Reset) ─────────────────────
+    static bool mP = false;
+    if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS && !mP) {
+        mP = true;
+        if (!gFootballMatch.active) {
+            gFootballMatch.reset();
+            gFootballMatch.active = true;
+            gFootballMatch.paused = false;
+            std::cout << "[M] Football Match STARTED  (Score 0-0)" << std::endl;
+        }
+        else if (!gFootballMatch.paused) {
+            gFootballMatch.paused = true;
+            std::cout << "[M] Football Match PAUSED" << std::endl;
+        }
+        else {
+            gFootballMatch.paused = false;
+            std::cout << "[M] Football Match RESUMED" << std::endl;
+        }
+    }
+    else if (glfwGetKey(window, GLFW_KEY_M) == GLFW_RELEASE) mP = false;
+
+    // SHIFT+M → Reset Football Match
+    static bool smP = false;
+    if (shiftHeld && glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS && !smP) {
+        smP = true;
+        gFootballMatch.reset();
+        std::cout << "[SHIFT+M] Football Match RESET" << std::endl;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_M) == GLFW_RELEASE) smP = false;
+
+    // ── N: Toggle Tennis Match (Start / Pause / Reset) ───────────────────────
+    static bool nP = false;
+    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS && !nP) {
+        nP = true;
+        if (!gTennisMatch.active) {
+            gTennisMatch.reset();
+            gTennisMatch.active = true;
+            gTennisMatch.paused = false;
+            std::cout << "[N] Tennis Match STARTED  (Score 0-0)" << std::endl;
+        }
+        else if (!gTennisMatch.paused) {
+            gTennisMatch.paused = true;
+            std::cout << "[N] Tennis Match PAUSED" << std::endl;
+        }
+        else {
+            gTennisMatch.paused = false;
+            std::cout << "[N] Tennis Match RESUMED" << std::endl;
+        }
+    }
+    else if (glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE) nP = false;
+
+    // SHIFT+N → Reset Tennis Match
+    static bool snP = false;
+    if (shiftHeld && glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS && !snP) {
+        snP = true;
+        gTennisMatch.reset();
+        std::cout << "[SHIFT+N] Tennis Match RESET" << std::endl;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE) snP = false;
+
 #define TOGGLE(key,var,name) \
     { static bool p=false; \
       if (glfwGetKey(window,key)==GLFW_PRESS&&!p){var=!var;p=true;std::cout<<name<<": "<<(var?"ON":"OFF")<<std::endl;} \
@@ -105,9 +186,14 @@ void printInstructions() {
     std::cout << "+==================================================================+" << std::endl;
     std::cout << "|  LIGHTING:  1=Dir  2=Point  3=Spot  5=Amb  6=Diff  7=Spec  L=Day|" << std::endl;
     std::cout << "+==================================================================+" << std::endl;
-    std::cout << "|  CAMERA: W/S/A/D=move  E/R=up/dn  X/Y/Z=pitch/yaw/roll          |" << std::endl;
-    std::cout << "|          F=Orbit  I=Bird's Eye  P=Reset  G=Grid toggle           |" << std::endl;
-    std::cout << "|  Walk into the LEFT building to see the dormitory room interior! |" << std::endl;
+    std::cout << "|  CAMERA: W/S/A/D=move  E/R=up/dn                                |" << std::endl;
+    std::cout << "|    Rotation: X=pitch+  SHIFT+X=pitch-                           |" << std::endl;
+    std::cout << "|              Y=yaw+    SHIFT+Y=yaw-                             |" << std::endl;
+    std::cout << "|              Z=roll+   SHIFT+Z=roll-                            |" << std::endl;
+    std::cout << "|    F=Orbit  I=Bird's Eye  P=Reset  G=Grid toggle               |" << std::endl;
+    std::cout << "+==================================================================+" << std::endl;
+    std::cout << "|  SPORTS:  M=Football Match (Start/Pause)  SHIFT+M=Reset         |" << std::endl;
+    std::cout << "|           N=Tennis Match   (Start/Pause)  SHIFT+N=Reset         |" << std::endl;
     std::cout << "+==================================================================+" << std::endl;
     std::cout << "|  VIEWPORTS: V+0=4split V+1=Iso V+2=Front V+3=Top V+4=Free       |" << std::endl;
     std::cout << "|  ESC = Quit                                                      |" << std::endl;
