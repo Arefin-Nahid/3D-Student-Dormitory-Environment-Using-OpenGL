@@ -484,8 +484,8 @@ void renderGate(unsigned int sh) {
         //   In night mode it emits warm amber light.
         {
             glm::vec3 peakF   = bezierCubic(b0, b1, b2, b3, 0.5f);
-            glm::vec3 signCtr = peakF + glm::vec3(0.f, -0.70f, 0.f);
-            float     signW   = (PILLAR_CX * 2.f) * 0.72f;  // 72% of span
+            glm::vec3 signCtr = peakF + glm::vec3(0.f, -2.f, 0.f);
+            float     signW   = (PILLAR_CX * 2.f) * 1.f;
             const glm::vec3 GOLD(0.92f, 0.78f, 0.28f);
             const glm::vec3 DARK(0.12f, 0.10f, 0.08f);
 
@@ -497,7 +497,7 @@ void renderGate(unsigned int sh) {
             // Gold lettering strip
             glm::vec3 em = dayMode ? ZERO3 : GOLD * 0.55f;
             glUniform3fv(glGetUniformLocation(sh,"emissive"),1,glm::value_ptr(em));
-            m = glm::scale(glm::translate(glm::mat4(1.f), signCtr + glm::vec3(0.f,0.f,-0.07f)),
+            m = glm::scale(glm::translate(glm::mat4(1.f), signCtr + glm::vec3(0.f,0.f,0.07f)),
                 { signW * 0.92f, 0.40f, 0.08f });
             drawCube(sh, m, GOLD, texMarble, 1.f);
 

@@ -8,7 +8,16 @@ void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    float vel = camera.speed * deltaTime;
+    float speedMultiplier = 1.0f;
+
+    // If SHIFT is held → speed boost
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+        glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) {
+        speedMultiplier = 3.0f;
+    }
+
+    float vel = camera.speed * speedMultiplier * deltaTime;
+
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) camera.position += camera.front * vel;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camera.position -= camera.front * vel;
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera.position -= camera.right * vel;
